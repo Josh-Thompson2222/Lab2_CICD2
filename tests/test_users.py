@@ -29,6 +29,20 @@ def test_delete_then_404(client):
     r2 = client.delete("/api/users/10")
     assert r2.status_code == 404
 
-def test_update_item_success(client):
-    response = client.put("/api/users", json=user_payload())
-    assert response.status_code == 200
+def test_update(client):
+    client.post("/api/users", json=user_payload(uid=10))
+    r1 = client.put("/api/users/10", json={
+        "user_id": 10,
+        "name": "UpdatedName",
+        "email": "updated@example.com",
+        "age": 20,
+        "student_id": "S7654321"
+    })
+    assert r1.status_code == 204
+    r2 = client.delete("/api/users/3")
+    assert r2.status_code == 404
+
+@pytest.mark.parametrize("bad_email", ["G1@com", "email@org", "@.comemail", "blankemail"])
+def test_bad_student_email_422(client, bad_email):
+ r = client.post("/api/users", json=user_payload(uid=20, sid=bad_email))
+ assert r.status_code == 422 # pydantic validation error
